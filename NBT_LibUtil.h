@@ -1,29 +1,37 @@
 #pragma once
+#include <bit>
 namespace NBT_Lib {
 	using std::byte;
 
+	template<typename valueType>
+	[[nodiscard]]
+	inline constexpr valueType byteswap(const valueType val) {
+		valueType flipped;
+		for (size_t i = 0u; i < sizeof(valueType); ++i) {
+			memcpy((&flipped) + i, (&val) + (sizeof(valueType) - 1u - i), 1u);
+		}
+		return flipped;
+	}
 #ifdef __cpp_lib_byteswap
+	template<>
+	[[nodiscard]]
 	inline constexpr float byteswap(const float val) {
 		return std::bit_cast<float>(std::byteswap(std::bit_cast<uint32_t>(val)));
 	}
+	template<>
+	[[nodiscard]]
 	inline constexpr double byteswap(const double val) {
 		return std::bit_cast<double>(std::byteswap(std::bit_cast<uint64_t>(val)));
 	}
 	template<std::integral valueType>
+	[[nodiscard]]
 	inline constexpr valueType byteswap(const valueType val) {
 		return std::byteswap(val);
 	}
 #endif
-	template<typename valueType>
-	inline constexpr valueType byteswap(const valueType val) {
-		valueType flipped;
-		for (size_t i = 0u; i < sizeof(valueType); ++i) {
-			memcpy((&flipped) + i, (&val) - (sizeof(valueType) - i), 1u);
-		}
-		return flipped;
-	}
 
 	template<typename T>
+	[[nodiscard]]
 	inline T copyAndFlipBytes(byte* src) {
 		T value;
 		memcpy(&value, src, sizeof(value));
@@ -31,6 +39,7 @@ namespace NBT_Lib {
 	}
 
 	template<typename objectType>
+	[[nodiscard]]
 	inline objectType* allocateMemory(std::pmr::memory_resource* memRes) {
 		return static_cast<objectType*>(memRes->allocate(sizeof(objectType), alignof(objectType)));
 	}
@@ -76,6 +85,7 @@ namespace NBT_Lib {
 		}
 
 		//Packs all the data into a single buffer and returns it.
+		[[nodiscard]]
 		std::vector<byte> getData() {
 			const size_t totalSize{ (chunks.size() - 1u) * chunkAllocSize + cursor };
 			std::vector<byte> data(totalSize);
